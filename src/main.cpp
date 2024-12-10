@@ -54,7 +54,7 @@ void setup() {
   // Read ADS129x ID:
   byte regValue = adsSensor.readRegister(ads::registers::id::REG_ADDR);
 
-  Serial.print("ID register: ");
+  Serial.print("chip ID register: ");
   printBits(adsSensor.readRegister(ads::registers::id::REG_ADDR));
   Serial.println("");
 
@@ -144,8 +144,9 @@ void loop() {
     byte offsetBinary = mask | (byteSample[0] & 0x7F);
     // Sample in binary offset of 24 bits. Remember, it has in MSB format. We can access with adsData->formatedData.channel[0].{hi,mid,low} fields
     int32_t sampleValue = (offsetBinary << 16) + (byteSample[1] << 8) + byteSample[2];
-
-    Serial.println(sampleValue, DEC);
+    
+    Serial.print(">cha1:");
+    // Serial.println(sampleValue, DEC);
     // Remove offset and scale the variable before printing in the monitor
     float v_ref = 2.4; // V_ref for the ADS1294. In my setup, VREFP = 2.4V (see VREF_4V bit in config3) and VREFN = 0V (connected to ground)
     float channelGain = 1;
@@ -153,7 +154,7 @@ void loop() {
     float sampleInVolts = sampleInVoltsAndWithOffset - v_ref;
     // Serial.print("Equivalent value in milivolts");
     // Serial.print("\t");
-    // Serial.println(sampleInVolts * 1e3, 5);
+    Serial.println(sampleInVolts * 1e3, 5);
 
     /*
         // Print in binary
@@ -176,7 +177,7 @@ void loop() {
   // Serial.println("");
   
   // Serial.println("Wait 1 second before execute again the loop");
-  // delay(100);
+  // delay(1000);
 }
 
 
