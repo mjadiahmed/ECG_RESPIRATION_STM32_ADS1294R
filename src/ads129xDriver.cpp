@@ -5,24 +5,32 @@
 
 #if ADS_LIBRARY_VERBOSE_LEVEL > 0
 // Code are wrapped in {} because must be treated as one line of code
-#define _ADS_WARNING(msg) \
-  {Serial.print("Warning: "); \
-    Serial.println(msg); \
+#define _ADS_WARNING(msg)                         \
+  {                                               \
+    Serial.print("Warning: ");                    \
+    Serial.println(msg);                          \
     Serial.println("Stopping program execution"); \
-    while (1); }
+    while (1)                                     \
+      ;                                           \
+  }
 #else
 #define _ADS_WARNING(msg) ; // Do nothing
 #endif
 
 #if ADS_LIBRARY_VERBOSE_LEVEL > 0
 // Code are wrapped in {} because must be treated as one line of code
-#define _ADS_ERROR(msg) \
-  {Serial.print("Error: "); \
-    Serial.println(msg); \
+#define _ADS_ERROR(msg)                           \
+  {                                               \
+    Serial.print("Error: ");                      \
+    Serial.println(msg);                          \
     Serial.println("Stopping program execution"); \
-    while (1); }
+    while (1)                                     \
+      ;                                           \
+  }
 #else
-#define _ADS_ERROR(msg) while(1);
+#define _ADS_ERROR(msg) \
+  while (1)             \
+    ;
 #endif
 
 /* ======= Wrapper to workaround the attachInterrupt limitation  ============= */
@@ -31,15 +39,18 @@
 // of the class in a global variable and call the right function from a global function
 ADS129xSensor *_ADS129xSensorPrivateInstance_ = 0; // Pointer to ADS129xx instance. It is used to call
 
-void _ISR_ADS_privateReadDataFromChip_() {
+void _ISR_ADS_privateReadDataFromChip_()
+{
   _ADS129xSensorPrivateInstance_->_privateReadDataFromChip_();
 }
 
-void ADS129xSensor::begin() {
+void ADS129xSensor::begin()
+{
   // Add this class to the instance
   if (_ADS129xSensorPrivateInstance_ == 0)
     _ADS129xSensorPrivateInstance_ = this;
-  else {
+  else
+  {
     _ADS_ERROR("The library allows only one ADS129xSensor object to be inicialized. You must call end() method in the other ADS129xSensor");
   }
 
@@ -76,25 +87,29 @@ void ADS129xSensor::begin() {
   // I also configure the arduino pins connected to them
 
   // If clksel pin is specified, external clock is provided to ADS chip.
-  if (clkselPin != ADS_PIN_NOT_USED) {
+  if (clkselPin != ADS_PIN_NOT_USED)
+  {
     pinMode(this->clkselPin, OUTPUT);
     enableExternalClockSource();
   }
 
   // Start pin
-  if (startPin != ADS_PIN_NOT_USED) {
+  if (startPin != ADS_PIN_NOT_USED)
+  {
     pinMode(this->startPin, OUTPUT);
     disableHardwareStartMode();
   }
 
   // Pdwn Pin
-  if (pwdnPin != ADS_PIN_NOT_USED) {
+  if (pwdnPin != ADS_PIN_NOT_USED)
+  {
     pinMode(this->pwdnPin, OUTPUT);
     disableHardwarePowerDownMode();
   }
 
   // Reset pin
-  if (resetPin != ADS_PIN_NOT_USED) {
+  if (resetPin != ADS_PIN_NOT_USED)
+  {
     pinMode(this->resetPin, OUTPUT);
     digitalWrite(this->resetPin, HIGH);
   }
@@ -107,34 +122,50 @@ void ADS129xSensor::begin() {
   // Checking that ADS is the right model
   byte idRegister = readRegister(id::REG_ADDR);
   uint8_t correctIdChip = 0;
-  switch (ADS_CHIP_USED) {
-    case ADS_1294: correctIdChip = id::ID_ADS1294;   break;
-    case ADS_1294R: correctIdChip = id::ID_ADS1294R;   break;
-    case ADS_1296: correctIdChip = id::ID_ADS1296;   break;
-    case ADS_1296R: correctIdChip = id::ID_ADS1296R;   break;
-    case ADS_1298: correctIdChip = id::ID_ADS1298;   break;
-    case ADS_1298R: correctIdChip = id::ID_ADS1298R;   break;
+  switch (ADS_CHIP_USED)
+  {
+  case ADS_1294:
+    correctIdChip = id::ID_ADS1294;
+    break;
+  case ADS_1294R:
+    correctIdChip = id::ID_ADS1294R;
+    break;
+  case ADS_1296:
+    correctIdChip = id::ID_ADS1296;
+    break;
+  case ADS_1296R:
+    correctIdChip = id::ID_ADS1296R;
+    break;
+  case ADS_1298:
+    correctIdChip = id::ID_ADS1298;
+    break;
+  case ADS_1298R:
+    correctIdChip = id::ID_ADS1298R;
+    break;
   }
 
   if (idRegister != correctIdChip)
     _ADS_ERROR("ID reported from ADS chip and the chip model configurated by user are not the same => Theorical y real ADS models are not the same !!!!!");
 
-  // Power up sequency completed
+    // Power up sequency completed
 #if ADS_LIBRARY_VERBOSE_LEVEL > 0
   Serial.println("Power-up sequency completed");
 #endif
 }
 
-void ADS129xSensor::end() {
+void ADS129xSensor::end()
+{
   sendSPICommandSDATAC(true);
   sendSPICommandSTOP(true);
   _ADS129xSensorPrivateInstance_ = NULL;
 }
 
-void ADS129xSensor::resetADS() {
+void ADS129xSensor::resetADS()
+{
   // FIXME: en estos comentarios, la construcción con "prefer" es correcta??
   // Hardware reset is prefered over software reset.
-  if (resetPin == ADS_PIN_NOT_USED) {
+  if (resetPin == ADS_PIN_NOT_USED)
+  {
     // Software reset is performed
     // If ADS129X is in read data continuous mode (RDATAC), SDATAC command must be issued before any other
     // commands can be sent to the device. If ADS129X is not in RDATAC mode, this command is ignore by chip.
@@ -145,7 +176,9 @@ void ADS129xSensor::resetADS() {
     //       make sure that chip ALWAYS is reseted.
     sendSPICommandSDATAC(true);
     sendSPICommandRESET(true);
-  } else {
+  }
+  else
+  {
     // Hardware reset is performed
     // No need for more worries ;)
     doHardwareReset();
@@ -155,12 +188,14 @@ void ADS129xSensor::resetADS() {
 }
 
 // Interruption won't be called if SPI is in use
-void ADS129xSensor::_privateReadDataFromChip_() {
+void ADS129xSensor::_privateReadDataFromChip_()
+{
   if (readingStatus == _ADS_NO_READING_NEW_DATA)
     return; // It is not needed to read the new available data
   else if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
     beginSpiTransaction();
-  else {
+  else
+  {
     sendCommand(ads::commands::RDATA, true); // Leave open SPI transaction
     // Only one sample need to be read -> later sample must be ignored
     readingStatus = _ADS_NO_READING_NEW_DATA;
@@ -170,7 +205,7 @@ void ADS129xSensor::_privateReadDataFromChip_() {
   for (uint8_t i = 0; i < _ADS_DATA_PACKAGE_SIZE; i++)
     adsData.rawData[i] = 0x00;
 
-  void *buffer = (void*) &adsData.rawData;
+  void *buffer = (void *)&adsData.rawData;
   SPI.transfer(buffer, _ADS_DATA_PACKAGE_SIZE);
 
   hasNewData = true;
@@ -178,7 +213,8 @@ void ADS129xSensor::_privateReadDataFromChip_() {
 }
 
 /* ====== Methods that use hardware pins ========== */
-void ADS129xSensor::doHardwareReset() {
+void ADS129xSensor::doHardwareReset()
+{
   if (resetPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("Reset pin is not specified!!!");
 
@@ -187,7 +223,8 @@ void ADS129xSensor::doHardwareReset() {
   digitalWrite(this->resetPin, HIGH);
 }
 
-void ADS129xSensor::enableHardwareStartMode() {
+void ADS129xSensor::enableHardwareStartMode()
+{
   if (startPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("Start pin is not specified!!!");
 
@@ -196,7 +233,8 @@ void ADS129xSensor::enableHardwareStartMode() {
   delay(_ADS_T_CLK_2);
 }
 
-void ADS129xSensor::disableHardwareStartMode() {
+void ADS129xSensor::disableHardwareStartMode()
+{
   if (startPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("Start pin is not specified!!!");
 
@@ -205,7 +243,8 @@ void ADS129xSensor::disableHardwareStartMode() {
   delay(_ADS_T_CLK_2);
 }
 
-void ADS129xSensor::enableExternalClockSource() {
+void ADS129xSensor::enableExternalClockSource()
+{
   if (clkselPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("Clksel pin is not specified!!!");
 
@@ -213,7 +252,8 @@ void ADS129xSensor::enableExternalClockSource() {
   digitalWrite(clkselPin, LOW);
 }
 
-void ADS129xSensor::disableExternalClockSource() {
+void ADS129xSensor::disableExternalClockSource()
+{
   if (clkselPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("Clksel pin is not specified!!!");
 
@@ -224,7 +264,8 @@ void ADS129xSensor::disableExternalClockSource() {
 }
 
 // Only it can be used if pwdn pin is specified
-void ADS129xSensor::enableHardwarePowerDownMode() {
+void ADS129xSensor::enableHardwarePowerDownMode()
+{
   if (pwdnPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("PWDN pin is not specified!!!");
 
@@ -232,7 +273,8 @@ void ADS129xSensor::enableHardwarePowerDownMode() {
   digitalWrite(this->pwdnPin, LOW);
 }
 // Only it can be used if pwdn pin is specified
-void ADS129xSensor::disableHardwarePowerDownMode() {
+void ADS129xSensor::disableHardwarePowerDownMode()
+{
   if (pwdnPin == ADS_PIN_NOT_USED)
     _ADS_ERROR("PWDN pin is not specified!!!");
 
@@ -245,9 +287,11 @@ void ADS129xSensor::disableHardwarePowerDownMode() {
 }
 
 // See page 17, section 7.7 Switching Characteristics: Serial Interface, and page 59, section 9.5 Programming, in the datasheet) to understand SPI communication
-void ADS129xSensor::beginSpiTransaction() {
+void ADS129xSensor::beginSpiTransaction()
+{
   // Configure SPI communication
-  if (!this->isSpiOpen) {
+  if (!this->isSpiOpen)
+  {
     // Delays aren0't need because Arduino is slow enough to execute beginTransaction and endTransaction functions
     SPI.beginTransaction(SPISettings(_ADS_SPI_MAX_SPEED, _ADS_SPI_BIT_ORDER, _ADS_SPI_MODE));
     digitalWrite(this->chipSelectPin, LOW);
@@ -257,8 +301,10 @@ void ADS129xSensor::beginSpiTransaction() {
 }
 
 // See page 17, section 7.7 Switching Characteristics: Serial Interface, and page 59, section 9.5 Programming, in the datasheet) to understand SPI communication
-void ADS129xSensor::endSpiTransaction() {
-  if (this->isSpiOpen) {
+void ADS129xSensor::endSpiTransaction()
+{
+  if (this->isSpiOpen)
+  {
     isSpiOpen = false;
     // Delays aren0't need because Arduino is slow enough to execute beginTransaction and endTransaction functions
     // delayMicroseconds(_ADS_T_SCCS);
@@ -269,12 +315,13 @@ void ADS129xSensor::endSpiTransaction() {
   }
 }
 
-
 /* ============ Registers ============== */
 // See page 17, section 7.7 Switching Characteristics: Serial Interface, and page 59, section 9.5 Programming, in the datasheet) to understand SPI communication
-byte ADS129xSensor::readRegister(byte registAddr, boolean keepSpiOpen) {
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands (like read/write registers) will be ignored "); 
+byte ADS129xSensor::readRegister(byte registAddr, boolean keepSpiOpen)
+{
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands (like read/write registers) will be ignored ");
     return 0xFF;
   }
 
@@ -296,9 +343,11 @@ byte ADS129xSensor::readRegister(byte registAddr, boolean keepSpiOpen) {
 }
 
 // See page 17, section 7.7 Switching Characteristics: Serial Interface, and page 59, section 9.5 Programming, in the datasheet) to understand SPI communication
-void ADS129xSensor::writeRegister(byte registAddr, byte data, boolean keepSpiOpen) {
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands (like read/write registers) will be ignored "); 
+void ADS129xSensor::writeRegister(byte registAddr, byte data, boolean keepSpiOpen)
+{
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands (like read/write registers) will be ignored ");
     return;
   }
 
@@ -321,13 +370,14 @@ void ADS129xSensor::writeRegister(byte registAddr, byte data, boolean keepSpiOpe
     endSpiTransaction();
 }
 
-void ADS129xSensor::setAllRegisterToResetValuesWithoutResetCommand( boolean keepSpiOpen) {
+void ADS129xSensor::setAllRegisterToResetValuesWithoutResetCommand(boolean keepSpiOpen)
+{
   using namespace ads::registers;
 
   // ID register is read only
   writeRegister(config1::REG_ADDR, config1::RESET_VALUE | config1::RESERVED_BITS, true);
   writeRegister(config2::REG_ADDR, config2::RESET_VALUE | config2::RESERVED_BITS, true);
-  writeRegister(config3::REG_ADDR, config3::RESET_VALUE | config3::RESERVED_BITS, true);
+  writeRegister(config3::REG_ADDR, config3::B_PD_REFBUF | 0x60, true); // was B_PD_REFBUF |config3::RESERVED_BITS
   writeRegister(loff::REG_ADDR, loff::RESET_VALUE | loff::RESERVED_BITS, true);
 
   // Channels registers
@@ -341,7 +391,7 @@ void ADS129xSensor::setAllRegisterToResetValuesWithoutResetCommand( boolean keep
   writeRegister(loffFlip::REG_ADDR, loffFlip::RESET_VALUE | loffFlip::RESERVED_BITS, true);
 
   // loff_statp and loff_statn are read-only registers
-  writeRegister(gpio::REG_ADDR, gpio::RESET_VALUE | gpio::RESERVED_BITS, true);
+  writeRegister(gpio::REG_ADDR, gpio::RESERVED_BITS | gpio::RESERVED_BITS, true); // was RESET_VALUE
   writeRegister(pace::REG_ADDR, pace::RESET_VALUE | pace::RESERVED_BITS, true);
   writeRegister(resp::REG_ADDR, resp::RESET_VALUE | resp::RESERVED_BITS, true);
   writeRegister(config4::REG_ADDR, config4::RESET_VALUE | config4::RESERVED_BITS, true);
@@ -351,7 +401,8 @@ void ADS129xSensor::setAllRegisterToResetValuesWithoutResetCommand( boolean keep
 
 /* ============ Commands ============== */
 // See page 17, section 7.7 Switching Characteristics: Serial Interface, and page 59, section 9.5 Programming, in the datasheet) to understand SPI communication
-void ADS129xSensor::sendCommand(byte command, boolean keepSpiOpen) {
+void ADS129xSensor::sendCommand(byte command, boolean keepSpiOpen)
+{
   beginSpiTransaction();
 
   // Send command
@@ -366,21 +417,25 @@ void ADS129xSensor::sendCommand(byte command, boolean keepSpiOpen) {
     endSpiTransaction();
 }
 
-void ADS129xSensor::sendSPICommandWAKEUP(boolean keepSpiOpen) {
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored"); 
+void ADS129xSensor::sendSPICommandWAKEUP(boolean keepSpiOpen)
+{
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
 
-  //After execute WAKEUP command, the next command must wait for 4*_ADS_T_CLK cycles (see page 61 in the datasheet)
-  // 4*_ADS_T_CLK is roughtly 2 microseconds
+  // After execute WAKEUP command, the next command must wait for 4*_ADS_T_CLK cycles (see page 61 in the datasheet)
+  //  4*_ADS_T_CLK is roughtly 2 microseconds
   sendCommand(ads::commands::WAKEUP, keepSpiOpen);
   delayMicroseconds(_ADS_T_CLK_4);
 }
 
-void ADS129xSensor::sendSPICommandSTANDBY(boolean keepSpiOpen) {
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored"); 
+void ADS129xSensor::sendSPICommandSTANDBY(boolean keepSpiOpen)
+{
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
 
@@ -388,12 +443,14 @@ void ADS129xSensor::sendSPICommandSTANDBY(boolean keepSpiOpen) {
   // No wait time needed
 }
 
-void ADS129xSensor::sendSPICommandRESET(boolean keepSpiOpen) {
+void ADS129xSensor::sendSPICommandRESET(boolean keepSpiOpen)
+{
   if (resetPin != ADS_PIN_NOT_USED)
     _ADS_ERROR("Reset pin is specified!!!! Reset must be done with the reset pin -> use doHardwareReset() method!!!");
 
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored"); 
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
 
@@ -403,27 +460,31 @@ void ADS129xSensor::sendSPICommandRESET(boolean keepSpiOpen) {
   delayMicroseconds(_ADS_T_CLK_18);
 }
 
-void ADS129xSensor::sendSPICommandSTART(boolean keepSpiOpen) {
+void ADS129xSensor::sendSPICommandSTART(boolean keepSpiOpen)
+{
   if (startPin != ADS_PIN_NOT_USED)
     _ADS_ERROR("Start pin is specified -> start and stop are not allowed!!!");
 
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored"); 
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
 
-  //After execute START command, the next command must wait for 4*_ADS_T_CLK cycles (see page 62 in the datasheet)
-  // 4*_ADS_T_CLK is roughtly 2 microseconds
+  // After execute START command, the next command must wait for 4*_ADS_T_CLK cycles (see page 62 in the datasheet)
+  //  4*_ADS_T_CLK is roughtly 2 microseconds
   sendCommand(ads::commands::START, keepSpiOpen);
   delayMicroseconds(_ADS_T_CLK_4); // Only is necesarry if just after is sent STOP command
 }
 
-void ADS129xSensor::sendSPICommandSTOP(boolean keepSpiOpen) {
+void ADS129xSensor::sendSPICommandSTOP(boolean keepSpiOpen)
+{
   if (startPin != ADS_PIN_NOT_USED)
     _ADS_ERROR("Start pin is specified -> start and stop are not allowed!!!");
 
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE){
-    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored"); 
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
+    _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
 
@@ -432,29 +493,34 @@ void ADS129xSensor::sendSPICommandSTOP(boolean keepSpiOpen) {
 }
 
 // Be aware that when RDATAC command is sent, the any other command except SDATAC will be ignored
-void ADS129xSensor::sendSPICommandRDATAC(boolean keepSpiOpen) {
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE) {
+void ADS129xSensor::sendSPICommandRDATAC(boolean keepSpiOpen)
+{
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
     _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
 
-  //After execute RDATAC command, the next command must wait for 4*_ADS_T_CLK cycles (see page 62 in the datasheet)
-  // 4*_ADS_T_CLK is roughtly 2 microseconds
+  // After execute RDATAC command, the next command must wait for 4*_ADS_T_CLK cycles (see page 62 in the datasheet)
+  //  4*_ADS_T_CLK is roughtly 2 microseconds
   sendCommand(ads::commands::RDATAC, keepSpiOpen);
   delayMicroseconds(_ADS_T_CLK_4);
   readingStatus = _ADS_READING_DATA_IN_RDATAC_MODE;
 }
 
-void ADS129xSensor::sendSPICommandSDATAC(boolean keepSpiOpen) {
-  //Afterfreturn execute SDATAC command, the next command must wait for 4*_ADS_T_CLK cycles (see page 63 in the datasheet)
-  // 4*_ADS_T_CLK is roughtly 2 microseconds
+void ADS129xSensor::sendSPICommandSDATAC(boolean keepSpiOpen)
+{
+  // Afterfreturn execute SDATAC command, the next command must wait for 4*_ADS_T_CLK cycles (see page 63 in the datasheet)
+  //  4*_ADS_T_CLK is roughtly 2 microseconds
   sendCommand(ads::commands::SDATAC, keepSpiOpen);
   delayMicroseconds(_ADS_T_CLK_4);
   readingStatus = _ADS_NO_READING_NEW_DATA;
 }
 
-void ADS129xSensor::sendSPICommandRDATA(boolean keepSpiOpen) {
-  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE) {
+void ADS129xSensor::sendSPICommandRDATA(boolean keepSpiOpen)
+{
+  if (readingStatus == _ADS_READING_DATA_IN_RDATAC_MODE)
+  {
     _ADS_WARNING("In RDATAC mode, ADS only accept SDATAC SPI command. Others commands will be ignored");
     return;
   }
@@ -468,7 +534,8 @@ void ADS129xSensor::sendSPICommandRDATA(boolean keepSpiOpen) {
 }
 
 /* ======= Class methods class implementing typical ADS configurations  ============= */
-void ADS129xSensor::disableChannel(uint8_t nChannel, boolean setInputAsShorted, boolean keepSpiOpen) {
+void ADS129xSensor::disableChannel(uint8_t nChannel, boolean setInputAsShorted, boolean keepSpiOpen)
+{
   using namespace ads::registers::chnSet;
   byte registerAddress = _BASE_REG_ADDR + nChannel;
   byte registerValue = readRegister(registerAddress, true);
@@ -476,7 +543,8 @@ void ADS129xSensor::disableChannel(uint8_t nChannel, boolean setInputAsShorted, 
   writeRegister(registerAddress, registerValue | B_PDn, keepSpiOpen);
 }
 
-void ADS129xSensor::enableChannel(uint8_t nChannel, int8_t channelInput, boolean keepSpiOpen) {
+void ADS129xSensor::enableChannel(uint8_t nChannel, int8_t channelInput, boolean keepSpiOpen)
+{
   if (nChannel == 0)
     _ADS_ERROR("nChannel is zero");
 
@@ -486,16 +554,18 @@ void ADS129xSensor::enableChannel(uint8_t nChannel, int8_t channelInput, boolean
   using namespace ads::registers::chnSet;
   byte registerAddress = _BASE_REG_ADDR + nChannel;
   byte registerValue = readRegister(registerAddress, true);
-  if (channelInput != -1) {
+  if (channelInput != -1)
+  {
     byte mask = B_MUXn2 | B_MUXn1 | B_MUXn0;
-    registerValue = registerValue & ~mask; // Remove current channel input configuration
+    registerValue = registerValue & ~mask;                 // Remove current channel input configuration
     registerValue = registerValue | (channelInput & mask); // Set the new channel input configuration
   }
   // Power up the channel --> write 0 in bit _PDn
   writeRegister(registerAddress, registerValue & (~B_PDn), keepSpiOpen);
 }
 
-void ADS129xSensor::enableChannelAndSetGain(uint8_t nChannel, byte channelGainConstant, int8_t channelInput, boolean keepSpiOpen) {
+void ADS129xSensor::enableChannelAndSetGain(uint8_t nChannel, byte channelGainConstant, int8_t channelInput, boolean keepSpiOpen)
+{
   using namespace ads::registers::chnSet;
   byte registerAddress = _BASE_REG_ADDR + nChannel;
   byte registerValue = readRegister(registerAddress, true);
@@ -507,5 +577,3 @@ void ADS129xSensor::enableChannelAndSetGain(uint8_t nChannel, byte channelGainCo
   // Power up the channel
   enableChannel(nChannel, channelInput, keepSpiOpen);
 }
-
-
