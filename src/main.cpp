@@ -1,122 +1,48 @@
 #include <Arduino.h>
-#include <SPI.h> // include the SPI library:
-
+#include <SPI.h>
 #include "ads129xDriver.h"
 
-// GPIO pins where CS, DRDY and RESET pins of the ADS chip are conected.
 /* ============== GPIO pins connected to ADS chip ===========*/
-// CS and DRDY pin of the ADS chip MUST be connected
 const int IPIN_PWDN = 5;
 const int PIN_CLKSEL = 9;
 const int IPIN_RESET = 6;
 const int PIN_START = 7;
-const int IPIN_DRDY = 8; // data ready
+const int IPIN_DRDY = 8;
 const int IPIN_CS = 10;
 const int DAISY_IN = 4;
 
 // Constructor
-ADS129xSensor adsSensor(IPIN_CS, IPIN_DRDY, IPIN_RESET); //, PIN_START, IPIN_PWDN, PIN_CLKSEL);
-
-// Helper function to print byte value in bits
-void printBits(byte myByte)
-{
-  for (byte mask = 0x80; mask; mask >>= 1)
-  {
-    if (mask & myByte)
-      Serial.print('1');
-    else
-      Serial.print('0');
-  }
-}
+ADS129xSensor adsSensor(IPIN_CS, IPIN_DRDY, IPIN_RESET); //); , PIN_START, IPIN_PWDN, PIN_CLKSEL);
+/* Functions prototypes */
+void printBits(byte myByte); // Helper function to print byte value in bits
 void pinSetup();
+void configADS1294R(void);
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("Starting the ADS setup");
-  Serial.println("Calling ADS129xSensor.begin() method. Remember to call at the beginning");
 
   pinSetup();
-  //  MUST call begin() method before any other method of ADS129xSensor
-  adsSensor.begin();
-
-  // It is not need. Only for example purposes
-  Serial.println("Example: reset value for all registers without reset command");
-  adsSensor.setAllRegisterToResetValuesWithoutResetCommand();
-
-  // Read ADS129x ID:
-  byte regValue = adsSensor.readRegister(ads::registers::id::REG_ADDR);
-
-  Serial.print("chip ID register: ");
-  printBits(adsSensor.readRegister(ads::registers::id::REG_ADDR));
-  Serial.println("");
-
-  Serial.print("Set sampling read to 1 kHz and low-power mode");
-  Serial.print("Keep in mind that when config1 or resp registers are changed, internal reset is performed. See the datasheet, section Reset");
-  // By default, ADS12xx is in low-power consumption and with a sample frequency of 250 Hz
-  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::HIGH_RES_8k_SPS);
-  Serial.print("The new value CONFIG1 register is ");
-  printBits(adsSensor.readRegister(ads::registers::config1::REG_ADDR));
-
-  // Setup of my circuit. In my case, it hadn't external reference,
-  Serial.println("Enabling internal reference buffer --> set PD_REFBUF to 1");
-  // If you change inividual bits with constants B_xx, you must add with the RESERVED_BITS constant value to be sure that you will
-  // write the right bits in the reserved bits in the register.
-  // Remember to write all desired configuration in a register  simultaneously. When you write a register, you delete all previous values
-  adsSensor.writeRegister(ads::registers::config3::REG_ADDR, ads::registers::config3::B_PD_REFBUF | ads::registers::config3::RESERVED_BITS);
-
-  // Wait for internal reference to wake up. See page 15, section Electrical Characteristicsm in the datasheet,
-  delayMicroseconds(150);
-
-  // Select test signal from chip
-  // As example, this 2 methods will keep the SPI open for ADS129x chip for faster configuration. The difference It's not noticeable for humans
-  // Be careful when you use this option. Read the documentation before using it.
-  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
-  // We will use the square signal at 4 Hz
-  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
-
-  Serial.println("Starting channels configuration");
-  Serial.println("Channel 1: gain 6 and normal input");
-  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
-  Serial.println("Channel 2: gain 6 and normal input");
-  adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
-  // Serial.println("Channel 3: power-down and its inputs shorted (as Texas Instruments recommends)");
-  adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
-
-  // adsSensor.disableChannel(3, true);
-  Serial.println("Channel 4 : set gain 6 and normal input");
-  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::TEMP);
-
-  Serial.println("Starting channels configuration");
-  adsSensor.sendSPICommandSTART();
-
-  // We need to put ADS in DATA or RDATC mode to receive new data
-  // Remember that in RDATAC mode, ADS ignores any SPI command sent if it is not SDATAC command
-  Serial.println("Set ADS chip in read data (RDATA) mode");
-  adsSensor.sendSPICommandRDATA();
-
-  // You can could the method end() to free GPIO used pins and resources. if you don't need any more de ADS
-  // You have to call begin() if you want to use again the ADS
-  // adsSensor.end()
+  configADS1294R();
 }
 
 void loop()
 {
 
-  if (adsSensor.hasNewDataAvailable())
+  if (adsSensor.hasNewDataAvailable()) // Serial.println("New data available");
   {
-    // Serial.println("New data available");
     ads_data_t *adsData = adsSensor.getData();
     // byte[3] statusWord = adsData->formatedData.statusWord;
     // byte[3] channel1 = adsData->formatedData.channel[0];
 
-    // Serial.println("Status word (in binary):");
-    // printBits(adsData->formatedData.statusWord[0]);
-    // Serial.print("\t");
-    // printBits(adsData->formatedData.statusWord[1]);
-    // Serial.print("\t");
-    // printBits(adsData->formatedData.statusWord[2]);
-    // Serial.println("");
+    Serial.println("Status word (in binary):");
+    printBits(adsData->formatedData.statusWord[0]);
+    Serial.print("\t");
+    printBits(adsData->formatedData.statusWord[1]);
+    Serial.print("\t");
+    printBits(adsData->formatedData.statusWord[2]);
+    Serial.println("");
 
     // Serial.println("Channel 1 sample:");
     // Serial.print(adsData->formatedData.channel[0].hi);
@@ -127,8 +53,6 @@ void loop()
     // Serial.print("\t");
 
     // Transform sample to voltage
-    // Remember that is in MSB (most significant bit) order!!! Position 0
-    // ADS send samples in 24 bits and in binary twos complement format.
 
     for (int i = 0; i < 4; i++)
     {
@@ -150,10 +74,6 @@ void loop()
       float sampleInVolts = sampleInVoltsAndWithOffset - v_ref;
 
       Serial.println(sampleInVolts * 1e3, 5);
-      // if (i < 3)
-      // {
-      //   Serial.print(",");
-      // }
     }
     // Serial.println();
 
@@ -172,14 +92,18 @@ void loop()
     adsSensor.sendSPICommandRDATA();
   }
 
-  // else {
-  //   Serial.println("No new data");
-  // }
-
-  // Serial.println("");
-
-  // Serial.println("Wait 1 second before execute again the loop");
   // delay(1000);
+}
+
+void printBits(byte myByte)
+{
+  for (byte mask = 0x80; mask; mask >>= 1)
+  {
+    if (mask & myByte)
+      Serial.print('1');
+    else
+      Serial.print('0');
+  }
 }
 
 void pinSetup()
@@ -205,4 +129,80 @@ void pinSetup()
   delay(100); // pause to provide ads129n enough time to boot up...
 
   Serial.println("ADS1294 setup OK");
+}
+
+void configADS1294R(void)
+{
+  Serial.println("Calling ADS129xSensor.begin() method. Remember to call at the beginning");
+
+  //  MUST call begin() method before any other method of ADS129xSensor
+  adsSensor.begin();
+
+  // It is not need. Only for example purposes
+  Serial.println("Example: reset value for all registers without reset command");
+  adsSensor.setAllRegisterToResetValuesWithoutResetCommand();
+
+  // Read ADS129x ID:
+  byte regValue = adsSensor.readRegister(ads::registers::id::REG_ADDR);
+
+  Serial.print("chip ID register: ");
+  printBits(adsSensor.readRegister(ads::registers::id::REG_ADDR));
+  Serial.println("");
+
+  Serial.print("Set sampling read to 1 kHz and low-power mode");
+  Serial.print("Keep in mind that when config1 or resp registers are changed, internal reset is performed. See the datasheet, section Reset");
+  // By default, ADS12xx is in low-power consumption and with a sample frequency of 250 Hz
+  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::HIGH_RES_8k_SPS);
+  Serial.print("The new value CONFIG1 register is ");
+  printBits(adsSensor.readRegister(ads::registers::config1::REG_ADDR));
+
+  /**
+   * Setup of my circuit. In my case, it hadn't external reference,
+   * If you change inividual bits with constants B_xx, you must add with the RESERVED_BITS constant value to be sure that you will
+   * write the right bits in the reserved bits in the register.
+   * Remember to write all desired configuration in a register  simultaneously. When you write a register, you delete all previous values
+   */
+  Serial.println("Enabling internal reference buffer --> set PD_REFBUF to 1");
+  adsSensor.writeRegister(ads::registers::config3::REG_ADDR, ads::registers::config3::B_PD_REFBUF | ads::registers::config3::RESERVED_BITS);
+
+  // Wait for internal reference to wake up. See page 15, section Electrical Characteristicsm in the datasheet,
+  delayMicroseconds(150);
+
+  /**
+   * Select test signal from chip
+   * As example, this 2 methods will keep the SPI open for ADS129x chip for faster configuration. The difference It's not noticeable for humans
+   * Be careful when you use this option. Read the documentation before using it.
+   */
+  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
+  // We will use the square signal at 4 Hz
+  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
+
+  Serial.println("Starting channels configuration");
+  Serial.println("Channel 1: gain 6 and normal input");
+  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+  Serial.println("Channel 2: gain 6 and normal input");
+  adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+  // Serial.println("Channel 3: power-down and its inputs shorted (as Texas Instruments recommends)");
+  adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+
+  // adsSensor.disableChannel(3, true);
+  Serial.println("Channel 4 : set gain 6 and normal input");
+  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::TEMP);
+
+  Serial.println("Starting channels configuration");
+  adsSensor.sendSPICommandSTART();
+
+  /**
+   * We need to put ADS in DATA or RDATC mode to receive new data
+   * Remember that in RDATAC mode, ADS ignores any SPI command sent if it is not SDATAC command
+   */
+  Serial.println("Set ADS chip in read data (RDATA) mode");
+  adsSensor.sendSPICommandRDATA();
+
+  /**
+   * You can could the method end() to free GPIO used pins and resources. if you don't need any more de ADS
+   * You have to call begin() if you want to use again the ADS
+   * */
+
+  // adsSensor.end()
 }

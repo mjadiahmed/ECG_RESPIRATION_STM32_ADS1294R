@@ -377,7 +377,7 @@ void ADS129xSensor::setAllRegisterToResetValuesWithoutResetCommand(boolean keepS
   // ID register is read only
   writeRegister(config1::REG_ADDR, config1::RESET_VALUE | config1::RESERVED_BITS, true);
   writeRegister(config2::REG_ADDR, config2::RESET_VALUE | config2::RESERVED_BITS, true);
-  writeRegister(config3::REG_ADDR, config3::B_PD_REFBUF | 0x60, true); // was B_PD_REFBUF |config3::RESERVED_BITS
+  writeRegister(config3::REG_ADDR, config3::RESET_VALUE | config3::RESERVED_BITS, true);
   writeRegister(loff::REG_ADDR, loff::RESET_VALUE | loff::RESERVED_BITS, true);
 
   // Channels registers
@@ -391,7 +391,7 @@ void ADS129xSensor::setAllRegisterToResetValuesWithoutResetCommand(boolean keepS
   writeRegister(loffFlip::REG_ADDR, loffFlip::RESET_VALUE | loffFlip::RESERVED_BITS, true);
 
   // loff_statp and loff_statn are read-only registers
-  writeRegister(gpio::REG_ADDR, gpio::RESERVED_BITS | gpio::RESERVED_BITS, true); // was RESET_VALUE
+  writeRegister(gpio::REG_ADDR, gpio::RESET_VALUE | gpio::RESERVED_BITS, true);
   writeRegister(pace::REG_ADDR, pace::RESET_VALUE | pace::RESERVED_BITS, true);
   writeRegister(resp::REG_ADDR, resp::RESET_VALUE | resp::RESERVED_BITS, true);
   writeRegister(config4::REG_ADDR, config4::RESET_VALUE | config4::RESERVED_BITS, true);
