@@ -138,7 +138,7 @@ namespace ads
             const byte TEST_FREQ_DC = (B_INT_TEST | 0x03 | RESERVED_BITS);
         }
 
-        namespace config3
+        namespace config3 // (Table 20. Configuration Register 3 Field Descriptions)
         {
             const byte REG_ADDR = 0X03;
             const byte RESERVED_BITS = 0x40;
@@ -431,7 +431,7 @@ namespace ads
             // FIXME: the reset value is 0x00 but datasheet says "Always write 1" in bit 5. I check in ADS1294 that the reset value is 0x00. Check it (page 80) when a new version of the datasheet will be available
             const byte RESERVED_BITS = 0x20;
             const boolean READ_ONLY_REGISTER = false;
-            const byte RESET_VALUE = 0x00;
+            const byte RESET_VALUE = 0b00000010; // A.MJADI (Table 8. Respiration Control)
 
 #if ADS_HAS_RESPIRATION_MODULE
             const byte B_RESP_DEMOD_EN1 = 0x80;

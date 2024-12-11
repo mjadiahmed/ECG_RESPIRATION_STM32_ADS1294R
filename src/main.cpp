@@ -1,3 +1,7 @@
+/**
+ * TODO: RLD, LeadOFF detection,
+ */
+
 #include <Arduino.h>
 #include <SPI.h>
 #include "ads129xDriver.h"
@@ -36,13 +40,13 @@ void loop()
     // byte[3] statusWord = adsData->formatedData.statusWord;
     // byte[3] channel1 = adsData->formatedData.channel[0];
 
-    Serial.println("Status word (in binary):");
-    printBits(adsData->formatedData.statusWord[0]);
-    Serial.print("\t");
-    printBits(adsData->formatedData.statusWord[1]);
-    Serial.print("\t");
-    printBits(adsData->formatedData.statusWord[2]);
-    Serial.println("");
+    // Serial.println("Status word (in binary):");
+    // printBits(adsData->formatedData.statusWord[0]);
+    // Serial.print("\t");
+    // printBits(adsData->formatedData.statusWord[1]);
+    // Serial.print("\t");
+    // printBits(adsData->formatedData.statusWord[2]);
+    // Serial.println("");
 
     // Serial.println("Channel 1 sample:");
     // Serial.print(adsData->formatedData.channel[0].hi);
@@ -119,8 +123,8 @@ void pinSetup()
   delay(500); // wait for the ads129n to be ready - it can take a while to charge caps
   digitalWrite(PIN_CLKSEL, HIGH);
   delay(1);
-  digitalWrite(IPIN_PWDN, HIGH); // turn off power down mode
-  digitalWrite(IPIN_RESET, HIGH);
+  digitalWrite(IPIN_PWDN, HIGH);  // turn off power down mode (9.3.2.2 Power-Down Pin (PWDN))
+  digitalWrite(IPIN_RESET, HIGH); // (9.3.2.3 Reset (RESET Pin and Reset Command))
   delay(100);
   digitalWrite(IPIN_RESET, LOW);
   delay(1);
@@ -133,14 +137,12 @@ void pinSetup()
 
 void configADS1294R(void)
 {
-  Serial.println("Calling ADS129xSensor.begin() method. Remember to call at the beginning");
-
   //  MUST call begin() method before any other method of ADS129xSensor
   adsSensor.begin();
 
-  // It is not need. Only for example purposes
-  Serial.println("Example: reset value for all registers without reset command");
-  adsSensor.setAllRegisterToResetValuesWithoutResetCommand();
+  // It is not necessary Only for example purposes
+  // Serial.println("Example: reset value for all registers without reset command");
+  // adsSensor.setAllRegisterToResetValuesWithoutResetCommand();
 
   // Read ADS129x ID:
   byte regValue = adsSensor.readRegister(ads::registers::id::REG_ADDR);
@@ -152,7 +154,7 @@ void configADS1294R(void)
   Serial.print("Set sampling read to 1 kHz and low-power mode");
   Serial.print("Keep in mind that when config1 or resp registers are changed, internal reset is performed. See the datasheet, section Reset");
   // By default, ADS12xx is in low-power consumption and with a sample frequency of 250 Hz
-  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::HIGH_RES_500_SPS);
+  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::LOW_POWR_250_SPS);
   Serial.print("The new value CONFIG1 register is ");
   printBits(adsSensor.readRegister(ads::registers::config1::REG_ADDR));
 
@@ -163,7 +165,7 @@ void configADS1294R(void)
    * Remember to write all desired configuration in a register  simultaneously. When you write a register, you delete all previous values
    */
   Serial.println("Enabling internal reference buffer --> set PD_REFBUF to 1");
-  adsSensor.writeRegister(ads::registers::config3::REG_ADDR, ads::registers::config3::B_PD_REFBUF | ads::registers::config3::RESERVED_BITS);
+  adsSensor.writeRegister(ads::registers::config3::REG_ADDR, ads::registers::config3::B_PD_REFBUF | ads::registers::config3::B_VREF_4V | ads::registers::config3::RESERVED_BITS);
 
   // Wait for internal reference to wake up. See page 15, section Electrical Characteristicsm in the datasheet,
   delayMicroseconds(150);
@@ -175,20 +177,20 @@ void configADS1294R(void)
    */
   // adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
   // We will use the square signal at 4 Hz
-  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
+  // adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
 
   Serial.println("Starting channels configuration");
   Serial.println("Channel 1: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
   Serial.println("Channel 2: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
   // Serial.println("Channel 3: power-down and its inputs shorted (as Texas Instruments recommends)");
   // adsSensor.disableChannel(3, true);
   Serial.println("Channel 3: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
 
   Serial.println("Channel 4 : set gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
 
   Serial.println("Starting channels configuration");
   adsSensor.sendSPICommandSTART();
