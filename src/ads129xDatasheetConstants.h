@@ -304,7 +304,7 @@ namespace ads
 
         namespace loffSensn
         {
-            const byte REG_ADDR = 0X10;
+            const byte REG_ADDR = 0x10;
             const byte RESERVED_BITS = 0x00;
             const boolean READ_ONLY_REGISTER = false;
             const byte RESET_VALUE = 0x00;

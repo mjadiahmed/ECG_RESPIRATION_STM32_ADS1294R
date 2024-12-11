@@ -92,7 +92,7 @@
 
     Credits:
       - This library is inspired by ADS129x-tools (https://github.com/adamfeuer/ADS129x-tools)
-      - Antonio and Marc for the support given during the development
+
 
 */
 

@@ -77,7 +77,7 @@ void loop()
       float sampleInVoltsAndWithOffset = v_ref * ((float)sampleValue) / (pow(2, 23) - 1) / channelGain;
       float sampleInVolts = sampleInVoltsAndWithOffset - v_ref;
 
-      Serial.println(sampleInVolts * 1e3, 5);
+      Serial.println((-1) * sampleInVolts * 1e3, 5); // test with negative sign
     }
     // Serial.println();
 
@@ -154,7 +154,7 @@ void configADS1294R(void)
   Serial.print("Set sampling read to 1 kHz and low-power mode");
   Serial.print("Keep in mind that when config1 or resp registers are changed, internal reset is performed. See the datasheet, section Reset");
   // By default, ADS12xx is in low-power consumption and with a sample frequency of 250 Hz
-  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::LOW_POWR_250_SPS);
+  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::LOW_POWR_500_SPS);
   Serial.print("The new value CONFIG1 register is ");
   printBits(adsSensor.readRegister(ads::registers::config1::REG_ADDR));
 
@@ -191,6 +191,23 @@ void configADS1294R(void)
 
   Serial.println("Channel 4 : set gain 6 and ELECTRODE input");
   adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
+
+  /** To be tested  , config according to frank613055 */
+  adsSensor.writeRegister(ads::registers::rldSensp::REG_ADDR, ads::registers::rldSensp::RESERVED_BITS);
+  adsSensor.writeRegister(ads::registers::rldSensn::REG_ADDR, ads::registers::rldSensn::RESERVED_BITS);
+  adsSensor.writeRegister(ads::registers::loffSensp::REG_ADDR, 0xFF); // lead off activated for 8 inputs ?
+  adsSensor.writeRegister(ads::registers::loffSensn::REG_ADDR, 0x02);
+  adsSensor.writeRegister(0x0F, 0xFF); // LOFF_SENSP //0xFF
+  adsSensor.writeRegister(0x10, 0x02); // LOFF_SENSN //0x02
+  adsSensor.writeRegister(0x11, 0x00); // LOFF_FLIP  //0x00
+  adsSensor.writeRegister(0x12, 0x00); // LOFF_STATP //0x00
+  adsSensor.writeRegister(0x13, 0x00); // LOFF_STATN //0x00
+  adsSensor.writeRegister(0x14, 0x00); // GPIO       //0x00
+  adsSensor.writeRegister(0x15, 0x00); // PACE       //0x00
+  adsSensor.writeRegister(0x16, 0x00); // RESP       //0x00
+  adsSensor.writeRegister(0x17, 0x00); // CONFIG4    //0x00
+  adsSensor.writeRegister(0x18, 0x00); // WCT1       //0x00
+  adsSensor.writeRegister(0x19, 0x00); // WCT2       //0x00
 
   Serial.println("Starting channels configuration");
   adsSensor.sendSPICommandSTART();
