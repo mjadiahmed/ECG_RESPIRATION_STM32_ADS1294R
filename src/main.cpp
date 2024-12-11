@@ -152,7 +152,7 @@ void configADS1294R(void)
   Serial.print("Set sampling read to 1 kHz and low-power mode");
   Serial.print("Keep in mind that when config1 or resp registers are changed, internal reset is performed. See the datasheet, section Reset");
   // By default, ADS12xx is in low-power consumption and with a sample frequency of 250 Hz
-  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::HIGH_RES_8k_SPS);
+  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::HIGH_RES_500_SPS);
   Serial.print("The new value CONFIG1 register is ");
   printBits(adsSensor.readRegister(ads::registers::config1::REG_ADDR));
 
@@ -173,21 +173,22 @@ void configADS1294R(void)
    * As example, this 2 methods will keep the SPI open for ADS129x chip for faster configuration. The difference It's not noticeable for humans
    * Be careful when you use this option. Read the documentation before using it.
    */
-  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
+  // adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
   // We will use the square signal at 4 Hz
   adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
 
   Serial.println("Starting channels configuration");
-  Serial.println("Channel 1: gain 6 and normal input");
+  Serial.println("Channel 1: gain 6 and ELECTRODE input");
   adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
-  Serial.println("Channel 2: gain 6 and normal input");
+  Serial.println("Channel 2: gain 6 and ELECTRODE input");
   adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
   // Serial.println("Channel 3: power-down and its inputs shorted (as Texas Instruments recommends)");
+  // adsSensor.disableChannel(3, true);
+  Serial.println("Channel 3: gain 6 and ELECTRODE input");
   adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
 
-  // adsSensor.disableChannel(3, true);
-  Serial.println("Channel 4 : set gain 6 and normal input");
-  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::TEMP);
+  Serial.println("Channel 4 : set gain 6 and ELECTRODE input");
+  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::ELECTRODE_INPUT);
 
   Serial.println("Starting channels configuration");
   adsSensor.sendSPICommandSTART();
