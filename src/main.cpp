@@ -25,9 +25,11 @@ void configADS1294R(void);
 void setup()
 {
   Serial.begin(115200);
+
   Serial.println("Starting the ADS setup");
 
-  pinSetup();
+  pinSetup(); // setting up all pins
+
   configADS1294R();
 }
 
@@ -254,7 +256,7 @@ void configADS1294R(void)
   adsSensor.sendSPICommandRDATA();
 
   /**
-   * You can could the method end() to free GPIO used pins and resources. if you don't need any more de ADS
+   * You can call the method end() to free GPIO used pins and resources. if you don't need any more from ADS
    * You have to call begin() if you want to use again the ADS
    * */
 
