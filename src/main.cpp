@@ -202,7 +202,7 @@ void configADS1294R(void)
 
   Serial.println("Starting channels configuration");
   Serial.println("Channel 1: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::TEST_SIGNAL);
+  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, 0x50); // ads::registers::chnSet::TEST_SIGNAL
   delay(10);
   Serial.println("Channel 2: gain 6 and ELECTRODE input");
   adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_6X, 0x50); // ads::registers::chnSet::ELECTRODE_INPUT
