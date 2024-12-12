@@ -30,7 +30,7 @@ void setup()
 
   pinSetup(); // setting up all pins
 
-  configADS1294R();
+  configADS1294R(); // setting up the ADS1294R, and registers with right values
 }
 
 void loop()
@@ -39,31 +39,13 @@ void loop()
   if (adsSensor.hasNewDataAvailable()) // Serial.println("New data available");
   {
     ads_data_t *adsData = adsSensor.getData();
-    // byte[3] statusWord = adsData->formatedData.statusWord;
-    // byte[3] channel1 = adsData->formatedData.channel[0];
-
-    // Serial.println("Status word (in binary):");
-    // printBits(adsData->formatedData.statusWord[0]);
-    // Serial.print("\t");
-    // printBits(adsData->formatedData.statusWord[1]);
-    // Serial.print("\t");
-    // printBits(adsData->formatedData.statusWord[2]);
-    // Serial.println("");
-
-    // Serial.println("Channel 1 sample:");
-    // Serial.print(adsData->formatedData.channel[0].hi);
-    // Serial.print("\t");
-    // Serial.print(adsData->formatedData.channel[0].mid);
-    // Serial.print("\t");
-    // Serial.print(adsData->formatedData.channel[0].low);
-    // Serial.print("\t");
 
     // Transform sample to voltage
 
     for (int i = 0; i < 4; i++)
     {
       byte *byteSample = (byte *)&adsData->formatedData.channel[i];
-      // For an easy manipulation, transform twos complement format to binary offset. It is equivalent to an unsigned value
+      // For an easy manipulation, transform the complement format to binary offset. It is equivalent to an unsigned value
       // with V_Ref offset. The new zero is equivalent in the real world to maximum negative value possible
       byte mask = byteSample[0] & 0x80;
       mask ^= 0x80;
@@ -82,17 +64,6 @@ void loop()
       Serial.println(sampleInVolts * 1e3, 5); // test with negative sign: (-1) *
     }
     // Serial.println();
-
-    /*
-        // Print in binary
-        Serial.print("Original bits for channel 1: ");
-        printBits(adsData->formatedData.channel[0].hi);
-        printBits(adsData->formatedData.channel[0].mid);
-        printBits(adsData->formatedData.channel[0].low);
-        Serial.println("");
-        Serial.print("Bits in offset binary for channel 1: ");
-        Serial.println(sampleValue, BIN);
-    */
 
     // Read new data. We aren't in RDATAC mode
     adsSensor.sendSPICommandRDATA();
