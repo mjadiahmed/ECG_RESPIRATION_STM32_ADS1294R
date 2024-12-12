@@ -45,3 +45,7 @@ adc_wreg(0x17, 0x00); //CONFIG4 //0x00
 adc_wreg(0x18, 0x00); //WCT1 //0x00
 adc_wreg(0x19, 0x00); //WCT2 //0x00
 }
+
+# make ECG simulator
+
+https://www.instructables.com/ECG-Simulator/

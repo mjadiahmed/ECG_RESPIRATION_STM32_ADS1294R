@@ -133,8 +133,8 @@ namespace ads
             const byte TEST_SOURCE_EXTERNAL = RESERVED_BITS;
             const byte TEST_SOURCE_INTERNAL = B_INT_TEST | RESERVED_BITS;
 
-            const byte TEST_FREQ_2HZ = (B_INT_TEST | 0x00 | RESERVED_BITS);
-            const byte TEST_FREQ_4HZ = (B_INT_TEST | 0x01 | RESERVED_BITS);
+            const byte TEST_FREQ_2HZ = (B_INT_TEST | 0x00 | RESERVED_BITS); // squared
+            const byte TEST_FREQ_4HZ = (B_INT_TEST | 0x01 | RESERVED_BITS); // squared
             const byte TEST_FREQ_DC = (B_INT_TEST | 0x03 | RESERVED_BITS);
         }
 

@@ -15,6 +15,19 @@ const int IPIN_DRDY = 8;
 const int IPIN_CS = 10;
 const int DAISY_IN = 4;
 
+// extra defines
+#define BIAS_SENSP 0x0D
+#define BIAS_SENSN 0x0E
+#define LOFF_SENSP 0x0F
+#define LOFF_SENSN 0x10
+#define LOFF_FLIP 0x11
+#define LOFF_STATP 0x12
+#define LOFF_STATN 0x13
+#define GPIO 0x14
+#define MISC1 0x15
+#define MISC2 0x16
+#define CONFIG4 0x17
+
 // Constructor
 ADS129xSensor adsSensor(IPIN_CS, IPIN_DRDY, IPIN_RESET); //); , PIN_START, IPIN_PWDN, PIN_CLKSEL);
 /* Functions prototypes */
@@ -72,12 +85,12 @@ void loop()
       Serial.printf(">cha%d:", i + 1);
       // Serial.println(sampleValue, DEC);
       // Remove offset and scale the variable before printing in the monitor
-      float v_ref = 2.4; // V_ref for the ADS1294. In my setup, VREFP = 2.4V (see VREF_4V bit in config3) and VREFN = 0V (connected to ground)
+      float v_ref = 4; // V_ref for the ADS1294. In my setup, VREFP = 2.4V (see VREF_4V bit in config3) and VREFN = 0V (connected to ground)
       float channelGain = 6;
       float sampleInVoltsAndWithOffset = v_ref * ((float)sampleValue) / (pow(2, 23) - 1) / channelGain;
       float sampleInVolts = sampleInVoltsAndWithOffset - v_ref;
 
-      Serial.println((-1) * sampleInVolts * 1e3, 5); // test with negative sign
+      Serial.println(sampleInVolts * 1e3, 5); // test with negative sign: (-1) *
     }
     // Serial.println();
 
@@ -141,8 +154,9 @@ void configADS1294R(void)
   adsSensor.begin();
 
   // It is not necessary Only for example purposes
-  // Serial.println("Example: reset value for all registers without reset command");
-  // adsSensor.setAllRegisterToResetValuesWithoutResetCommand();
+  Serial.println("Example: reset value for all registers without reset command");
+  adsSensor.setAllRegisterToResetValuesWithoutResetCommand();
+  delayMicroseconds(500);
 
   // Read ADS129x ID:
   byte regValue = adsSensor.readRegister(ads::registers::id::REG_ADDR);
@@ -153,10 +167,26 @@ void configADS1294R(void)
 
   Serial.print("Set sampling read to 1 kHz and low-power mode");
   Serial.print("Keep in mind that when config1 or resp registers are changed, internal reset is performed. See the datasheet, section Reset");
+
+  /**
+   * CONFIG
+   */
   // By default, ADS12xx is in low-power consumption and with a sample frequency of 250 Hz
-  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::LOW_POWR_500_SPS);
+  adsSensor.writeRegister(ads::registers::config1::REG_ADDR, ads::registers::config1::LOW_POWR_250_SPS); // LOW_POWR_250_SPS is the best
+  delayMicroseconds(150);
+
   Serial.print("The new value CONFIG1 register is ");
   printBits(adsSensor.readRegister(ads::registers::config1::REG_ADDR));
+
+  /**
+   * Select test signal from chip
+   * As example, this 2 methods will keep the SPI open for ADS129x chip for faster configuration. The difference It's not noticeable for humans
+   * Be careful when you use this option. Read the documentation before using it.
+   */
+  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
+  // We will use the square signal at 4 Hz
+  adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
+  delayMicroseconds(150);
 
   /**
    * Setup of my circuit. In my case, it hadn't external reference,
@@ -165,49 +195,66 @@ void configADS1294R(void)
    * Remember to write all desired configuration in a register  simultaneously. When you write a register, you delete all previous values
    */
   Serial.println("Enabling internal reference buffer --> set PD_REFBUF to 1");
-  adsSensor.writeRegister(ads::registers::config3::REG_ADDR, ads::registers::config3::B_PD_REFBUF | ads::registers::config3::B_VREF_4V | ads::registers::config3::RESERVED_BITS);
+  adsSensor.writeRegister(ads::registers::config3::REG_ADDR, 0xDC); // ads::registers::config3::B_PD_REFBUF | ads::registers::config3::B_VREF_4V | ads::registers::config3::RESERVED_BITS  //| ads::registers::config3::B_VREF_4V
 
   // Wait for internal reference to wake up. See page 15, section Electrical Characteristicsm in the datasheet,
   delayMicroseconds(150);
 
-  /**
-   * Select test signal from chip
-   * As example, this 2 methods will keep the SPI open for ADS129x chip for faster configuration. The difference It's not noticeable for humans
-   * Be careful when you use this option. Read the documentation before using it.
-   */
-  // adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_SOURCE_INTERNAL, true);
-  // We will use the square signal at 4 Hz
-  // adsSensor.writeRegister(ads::registers::config2::REG_ADDR, ads::registers::config2::TEST_FREQ_4HZ, true);
-
   Serial.println("Starting channels configuration");
   Serial.println("Channel 1: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(1, ads::registers::chnSet::GAIN_6X, ads::registers::chnSet::TEST_SIGNAL);
+  delay(10);
   Serial.println("Channel 2: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(2, ads::registers::chnSet::GAIN_6X, 0x50); // ads::registers::chnSet::ELECTRODE_INPUT
+  delay(10);
   // Serial.println("Channel 3: power-down and its inputs shorted (as Texas Instruments recommends)");
   // adsSensor.disableChannel(3, true);
   Serial.println("Channel 3: gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(3, ads::registers::chnSet::GAIN_6X, 0x50); // ads::registers::chnSet::ELECTRODE_INPUT
+  delay(10);
 
   Serial.println("Channel 4 : set gain 6 and ELECTRODE input");
-  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_12X, ads::registers::chnSet::ELECTRODE_INPUT);
+  adsSensor.enableChannelAndSetGain(4, ads::registers::chnSet::GAIN_6X, 0x50); // ads::registers::chnSet::ELECTRODE_INPUT
+  delay(10);
+  // to do : bias &value of channel;
 
-  /** To be tested  , config according to frank613055 */
-  adsSensor.writeRegister(ads::registers::rldSensp::REG_ADDR, ads::registers::rldSensp::RESERVED_BITS);
-  adsSensor.writeRegister(ads::registers::rldSensn::REG_ADDR, ads::registers::rldSensn::RESERVED_BITS);
-  adsSensor.writeRegister(ads::registers::loffSensp::REG_ADDR, 0xFF); // lead off activated for 8 inputs ?
-  adsSensor.writeRegister(ads::registers::loffSensn::REG_ADDR, 0x02);
-  adsSensor.writeRegister(0x0F, 0xFF); // LOFF_SENSP //0xFF
-  adsSensor.writeRegister(0x10, 0x02); // LOFF_SENSN //0x02
-  adsSensor.writeRegister(0x11, 0x00); // LOFF_FLIP  //0x00
-  adsSensor.writeRegister(0x12, 0x00); // LOFF_STATP //0x00
-  adsSensor.writeRegister(0x13, 0x00); // LOFF_STATN //0x00
-  adsSensor.writeRegister(0x14, 0x00); // GPIO       //0x00
-  adsSensor.writeRegister(0x15, 0x00); // PACE       //0x00
-  adsSensor.writeRegister(0x16, 0x00); // RESP       //0x00
-  adsSensor.writeRegister(0x17, 0x00); // CONFIG4    //0x00
-  adsSensor.writeRegister(0x18, 0x00); // WCT1       //0x00
-  adsSensor.writeRegister(0x19, 0x00); // WCT2       //0x00
+  adsSensor.writeRegister(BIAS_SENSP, 0x00);
+  delay(10);
+  adsSensor.writeRegister(BIAS_SENSN, 0x00);
+  delay(10);
+
+  adsSensor.writeRegister(LOFF_SENSP, 0xFF);
+  delay(10);
+  adsSensor.writeRegister(LOFF_SENSN, 0x02);
+  delay(10);
+
+  adsSensor.writeRegister(LOFF_FLIP, 0x00);
+  delay(10);
+
+  adsSensor.writeRegister(LOFF_STATP, 0xF1);
+  delay(10);
+  adsSensor.writeRegister(LOFF_STATN, 0x00);
+  delay(10);
+
+  adsSensor.writeRegister(GPIO, 0x00);
+  delay(10);
+
+  adsSensor.writeRegister(MISC1, 0x00);
+  delay(10);
+  adsSensor.writeRegister(MISC2, 0xF0);
+  delay(10);
+
+  adsSensor.writeRegister(ads::registers::config4::REG_ADDR, 0x22);
+  delay(10);
+
+  adsSensor.writeRegister(0x18, 0x0A);
+  delay(10);
+
+  adsSensor.writeRegister(0x19, 0xE3);
+  delay(10);
+
+  adsSensor.writeRegister(0, 17);
+  delay(1000);
 
   Serial.println("Starting channels configuration");
   adsSensor.sendSPICommandSTART();
