@@ -218,9 +218,9 @@ void configADS1294R(void)
   adsSensor.writeRegister(ads::registers::loffFlip::REG_ADDR, ads::registers::loffFlip::RESERVED_BITS);
   delay(10);
 
-  adsSensor.writeRegister(LOFF_STATP, 0xF1);
+  adsSensor.writeRegister(ads::registers::loffStatp::REG_ADDR, 0xF1);
   delay(10);
-  adsSensor.writeRegister(LOFF_STATN, 0x00);
+  adsSensor.writeRegister(ads::registers::loffStatn::REG_ADDR, 0x00);
   delay(10);
 
   adsSensor.writeRegister(ads::registers::gpio::REG_ADDR, 0x00);
@@ -240,7 +240,7 @@ void configADS1294R(void)
   adsSensor.writeRegister(ads::registers::wct2::REG_ADDR, 0xE3);
   delay(10);
 
-  adsSensor.writeRegister(0, 17);
+  adsSensor.writeRegister(0, 17); // dummy byte
   delay(1000);
 
   Serial.println("Starting channels configuration");
