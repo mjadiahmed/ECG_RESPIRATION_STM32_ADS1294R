@@ -15,19 +15,6 @@ const int IPIN_DRDY = 8;
 const int IPIN_CS = 10;
 const int DAISY_IN = 4;
 
-// extra defines
-#define BIAS_SENSP 0x0D
-#define BIAS_SENSN 0x0E
-#define LOFF_SENSP 0x0F
-#define LOFF_SENSN 0x10
-#define LOFF_FLIP 0x11
-#define LOFF_STATP 0x12
-#define LOFF_STATN 0x13
-#define GPIO 0x14
-#define MISC1 0x15
-#define MISC2 0x16
-#define CONFIG4 0x17
-
 // Constructor
 ADS129xSensor adsSensor(IPIN_CS, IPIN_DRDY, IPIN_RESET); //); , PIN_START, IPIN_PWDN, PIN_CLKSEL);
 /* Functions prototypes */
@@ -218,17 +205,17 @@ void configADS1294R(void)
   delay(10);
   // to do : bias &value of channel;
 
-  adsSensor.writeRegister(BIAS_SENSP, 0x00);
+  adsSensor.writeRegister(ads::registers::rldSensp::REG_ADDR, ads::registers::rldSensp::RESERVED_BITS);
   delay(10);
-  adsSensor.writeRegister(BIAS_SENSN, 0x00);
-  delay(10);
-
-  adsSensor.writeRegister(LOFF_SENSP, 0xFF);
-  delay(10);
-  adsSensor.writeRegister(LOFF_SENSN, 0x02);
+  adsSensor.writeRegister(ads::registers::rldSensn::REG_ADDR, ads::registers::rldSensp::RESERVED_BITS);
   delay(10);
 
-  adsSensor.writeRegister(LOFF_FLIP, 0x00);
+  adsSensor.writeRegister(ads::registers::loffSensp::REG_ADDR, 0xFF);
+  delay(10);
+  adsSensor.writeRegister(ads::registers::loffSensn::REG_ADDR, 0x02);
+  delay(10);
+
+  adsSensor.writeRegister(ads::registers::loffFlip::REG_ADDR, ads::registers::loffFlip::RESERVED_BITS);
   delay(10);
 
   adsSensor.writeRegister(LOFF_STATP, 0xF1);
@@ -236,21 +223,21 @@ void configADS1294R(void)
   adsSensor.writeRegister(LOFF_STATN, 0x00);
   delay(10);
 
-  adsSensor.writeRegister(GPIO, 0x00);
+  adsSensor.writeRegister(ads::registers::gpio::REG_ADDR, 0x00);
   delay(10);
 
-  adsSensor.writeRegister(MISC1, 0x00);
+  adsSensor.writeRegister(ads::registers::pace::REG_ADDR, 0x00);
   delay(10);
-  adsSensor.writeRegister(MISC2, 0xF0);
+  adsSensor.writeRegister(ads::registers::resp::REG_ADDR, 0xF0);
   delay(10);
 
   adsSensor.writeRegister(ads::registers::config4::REG_ADDR, 0x22);
   delay(10);
 
-  adsSensor.writeRegister(0x18, 0x0A);
+  adsSensor.writeRegister(ads::registers::wct1::REG_ADDR, 0x0A);
   delay(10);
 
-  adsSensor.writeRegister(0x19, 0xE3);
+  adsSensor.writeRegister(ads::registers::wct2::REG_ADDR, 0xE3);
   delay(10);
 
   adsSensor.writeRegister(0, 17);

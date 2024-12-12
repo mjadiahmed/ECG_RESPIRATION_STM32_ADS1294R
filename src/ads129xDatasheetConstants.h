@@ -552,4 +552,16 @@ namespace ads
     } // End of the register namespace
 } // End of the ads namespace
 
+// extra defines by A.MJADI RUSS
+#define BIAS_SENSP 0x0D
+#define BIAS_SENSN 0x0E
+#define LOFF_SENSP 0x0F
+#define LOFF_SENSN 0x10
+#define LOFF_FLIP 0x11
+#define LOFF_STATP 0x12
+#define LOFF_STATN 0x13
+#define GPIO 0x14
+#define MISC1 0x15
+#define MISC2 0x16
+
 #endif /* ADS129XX_CONSTANTS_H_ */
